@@ -1,0 +1,19 @@
+# ChatBot YAML configuration
+default_response: Przepraszam, nie rozumiem pytania. Możesz je sformułować inaczej?
+
+questions:
+- trigger_words:
+  - godziny otwarcia
+  - kiedy jesteście otwarci
+  response: "Nasze godziny otwarcia to od poniedziałku do piątku, od 9:00 do 17:00."
+
+- trigger_words:
+  - kontakt
+  - numer telefonu
+  - email
+  response: "Możesz się z nami skontaktować telefonicznie pod numerem +48 123 456 789 lub przez e-mail: kontakt@przykladowafirma.pl"
+
+- trigger_words:
+  - lokalizacja
+  - gdzie jesteście
+  response: "Nasza siedziba znajduje się przy ul. Przykładowej 123, 00-000 Warszawa."
