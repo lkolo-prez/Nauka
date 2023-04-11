@@ -184,13 +184,30 @@ def czy_pat(kolor, szachownica):
 
 class Gra:
     def __init__(self):
-        self.szachownica = Szachownica()
+        self.szachownica = self.poczatkowa_szachownica()
         self.gracz_bialy = True  # True - gracz biały, False - gracz czarny
+
+    def poczatkowa_szachownica(self):
+        # Utwórz początkową szachownicę
+        szachownica = [['' for _ in range(8)] for _ in range(8)]
+
+        # Rozstawienie pionków
+        for y in range(8):
+            szachownica[1][y] = Pionek('biały')
+            szachownica[6][y] = Pionek('czarny')
+
+        # Rozstawienie innych figur
+        figury = [Wieza, Skoczek, Goniec, Hetman, Krol, Goniec, Skoczek, Wieza]
+        for y, Figura in enumerate(figury):
+            szachownica[0][y] = Figura('biały')
+            szachownica[7][y] = Figura('czarny')
+
+        return szachownica
 
     def ruch(self, poczatek, koniec):
         x1, y1 = poczatek
         x2, y2 = koniec
-        figura = self.szachownica.plansza[x1][y1]
+        figura = self.szachownica[x1][y1]
 
         if figura == '':
             return False
@@ -202,7 +219,32 @@ class Gra:
         if (x2, y2) not in ruchy:
             return False
 
-        self.szachownica.plansza[x1][y1] = ''
-        self.szachownica.plansza[x2][y2] = figura
+        # Wykonaj próbny ruch
+        szachownica_docelowa = [wiersz[:] for wiersz in self.szachownica]
+        szachownica_docelowa[x2][y2] = szachownica_docelowa[x1][y1]
+        szachownica_docelowa[x1][y1] = ''
+
+        # Sprawdź czy w wyniku ruchu król nie jest szachowany
+        if czy_szach(figura.kolor, szachownica_docelowa):
+            return False
+
+        # Wykonaj ruch na oryginalnej szachownicy
+        self.szachownica[x2][y2] = self.szachownica[x1][y1]
+        self.szachownica[x1][y1] = ''
         self.gracz_bialy = not self.gracz_bialy
         return True
+
+    def stan_gry(self):
+        kolor = 'biały' if self.gracz_bialy else 'czarny'
+
+        if czy_szach_mat(kolor, self.szachownica):
+            return f"Szach-mat! Wygrywa {'czarny' if self.gracz_bialy else 'biały'}."
+
+        if czy_pat(kolor, self.szachownica):
+            return "Pat! Remis."
+
+        if czy_szach(kolor, self.szachownica):
+            return f"Szach! Tura gracza {kolor}."
+
+        return f"Tura gracza {kolor}."
+
