@@ -2,23 +2,26 @@ class Szachownica:
     def __init__(self):
         self.plansza = [['' for _ in range(8)] for _ in range(8)]
 
-class Pionek:
+class Goniec:
     def __init__(self, kolor):
         self.kolor = kolor
 
-    def dozwolone_ruchy(self, pozycja):
+    def dozwolone_ruchy(self, pozycja, szachownica):
         x, y = pozycja
         ruchy = []
-        if self.kolor == 'biały':
-            if x - 1 >= 0:
-                ruchy.append((x - 1, y))
-            if x == 6:
-                ruchy.append((x - 2, y))
-        else:  # kolor == 'czarny'
-            if x + 1 < 8:
-                ruchy.append((x + 1, y))
-            if x == 1:
-                ruchy.append((x + 2, y))
+
+        for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            nx, ny = x + dx, y + dy
+            while 0 <= nx < 8 and 0 <= ny < 8:
+                figura = szachownica[nx][ny]
+                if figura == '':
+                    ruchy.append((nx, ny))
+                else:
+                    if figura.kolor != self.kolor:
+                        ruchy.append((nx, ny))
+                    break
+                nx += dx
+                ny += dy
 
         return ruchy
 class Wieza:
@@ -50,6 +53,133 @@ class Wieza:
                     break
 
         return ruchy
+
+class Goniec:
+    def __init__(self, kolor):
+        self.kolor = kolor
+
+    def dozwolone_ruchy(self, pozycja, szachownica):
+        x, y = pozycja
+        ruchy = []
+
+        for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            nx, ny = x + dx, y + dy
+            while 0 <= nx < 8 and 0 <= ny < 8:
+                figura = szachownica[nx][ny]
+                if figura == '':
+                    ruchy.append((nx, ny))
+                else:
+                    if figura.kolor != self.kolor:
+                        ruchy.append((nx, ny))
+                    break
+                nx += dx
+                ny += dy
+
+        return ruchy
+
+class Goniec:
+    def __init__(self, kolor):
+        self.kolor = kolor
+
+    def dozwolone_ruchy(self, pozycja, szachownica):
+        x, y = pozycja
+        ruchy = []
+
+        for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+            nx, ny = x + dx, y + dy
+            while 0 <= nx < 8 and 0 <= ny < 8:
+                figura = szachownica[nx][ny]
+                if figura == '':
+                    ruchy.append((nx, ny))
+                else:
+                    if figura.kolor != self.kolor:
+                        ruchy.append((nx, ny))
+                    break
+                nx += dx
+                ny += dy
+
+        return ruchy
+    
+class Krol:
+    def __init__(self, kolor):
+        self.kolor = kolor
+
+    def dozwolone_ruchy(self, pozycja, szachownica):
+        x, y = pozycja
+        ruchy = []
+
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if dx != 0 or dy != 0:  # Król nie może pozostać na swoim miejscu
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < 8 and 0 <= ny < 8:
+                        figura = szachownica[nx][ny]
+                        if figura == '' or figura.kolor != self.kolor:
+                            ruchy.append((nx, ny))
+
+        return ruchy
+
+
+class Hetman:
+    def __init__(self, kolor):
+        self.kolor = kolor
+
+    def dozwolone_ruchy(self, pozycja, szachownica):
+        ruchy = []
+
+        # Hetman łączy ruchy gonca i wieży
+        goniec = Goniec(self.kolor)
+        wieza = Wieza(self.kolor)
+        ruchy.extend(goniec.dozwolone_ruchy(pozycja, szachownica))
+        ruchy.extend(wieza.dozwolone_ruchy(pozycja, szachownica))
+
+        return ruchy
+
+def czy_szach(kolor, szachownica):
+    # Wyszukaj pozycje króla
+    for x in range(8):
+        for y in range(8):
+            figura = szachownica[x][y]
+            if isinstance(figura, Krol) and figura.kolor == kolor:
+                krol_pozycja = (x, y)
+                break
+
+    przeciwnik = 'czarny' if kolor == 'biały' else 'biały'
+
+    # Sprawdź czy przeciwnik może zaatakować króla
+    for x in range(8):
+        for y in range(8):
+            figura = szachownica[x][y]
+            if figura != '' and figura.kolor == przeciwnik:
+                ruchy = figura.dozwolone_ruchy((x, y), szachownica)
+                if krol_pozycja in ruchy:
+                    return True
+
+    return False
+
+def czy_szach_mat(kolor, szachownica):
+    for x in range(8):
+        for y in range(8):
+            figura = szachownica[x][y]
+            if figura != '' and figura.kolor == kolor:
+                ruchy = figura.dozwolone_ruchy((x, y), szachownica)
+                for ruch in ruchy:
+                    # Wykonaj próbny ruch
+                    szachownica_docelowa = [wiersz[:] for wiersz in szachownica]
+                    szachownica_docelowa[ruch[0]][ruch[1]] = szachownica[x][y]
+                    szachownica_docelowa[x][y] = ''
+
+                    # Sprawdź czy w wyniku ruchu król nie jest szachowany
+                    if not czy_szach(kolor, szachownica_docelowa):
+                        return False
+
+    return True
+
+def czy_pat(kolor, szachownica):
+    if not czy_szach(kolor, szachownica):
+        return czy_szach_mat(kolor, szachownica)
+    return False
+
 
 
 class Gra:
