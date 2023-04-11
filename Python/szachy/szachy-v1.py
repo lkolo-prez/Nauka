@@ -42,6 +42,35 @@ class Szachownica:
     def ustaw_figury(self, figury):
         for (x, y), figura in figury.items():
             self.plansza[x][y] = figura
+class Pionek:
+    def __init__(self, kolor):
+        self.kolor = kolor
+
+    def dozwolone_ruchy(self, pozycja, szachownica):
+        x, y = pozycja
+        ruchy = []
+
+        if self.kolor == 'biały':
+            kierunek = 1
+            startowy_rzad = 1
+        else:
+            kierunek = -1
+            startowy_rzad = 6
+
+        if 0 <= x + kierunek < 8:
+            if szachownica[x + kierunek][y] == '':
+                ruchy.append((x + kierunek, y))
+
+            if y - 1 >= 0 and szachownica[x + kierunek][y - 1] != '' and szachownica[x + kierunek][y - 1].kolor != self.kolor:
+                ruchy.append((x + kierunek, y - 1))
+
+            if y + 1 < 8 and szachownica[x + kierunek][y + 1] != '' and szachownica[x + kierunek][y + 1].kolor != self.kolor:
+                ruchy.append((x + kierunek, y + 1))
+
+        if x == startowy_rzad and szachownica[x + 2 * kierunek][y] == '':
+            ruchy.append((x + 2 * kierunek, y))
+
+        return ruchy
 
 class Goniec:
     def __init__(self, kolor):
@@ -118,7 +147,7 @@ class Goniec:
 
         return ruchy
 
-class Goniec:
+class Skoczek:
     def __init__(self, kolor):
         self.kolor = kolor
 
@@ -126,18 +155,12 @@ class Goniec:
         x, y = pozycja
         ruchy = []
 
-        for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+        for dx, dy in [(1, 2), (2, 1), (-1, 2), (2, -1), (1, -2), (-2, 1), (-1, -2), (-2, -1)]:
             nx, ny = x + dx, y + dy
-            while 0 <= nx < 8 and 0 <= ny < 8:
+            if 0 <= nx < 8 and 0 <= ny < 8:
                 figura = szachownica[nx][ny]
-                if figura == '':
+                if figura == '' or figura.kolor != self.kolor:
                     ruchy.append((nx, ny))
-                else:
-                    if figura.kolor != self.kolor:
-                        ruchy.append((nx, ny))
-                    break
-                nx += dx
-                ny += dy
 
         return ruchy
     
@@ -221,43 +244,23 @@ def czy_pat(kolor, szachownica):
         return czy_szach_mat(kolor, szachownica)
     return False
 
-
-
 class Gra:
     def __init__(self):
-        self.szachownica = self.poczatkowa_szachownica()
-        self.gracz_bialy = True  # True - gracz biały, False - gracz czarny
-
-    def poczatkowa_szachownica(self):
-        # Utwórz początkową szachownicę
-        szachownica = [['' for _ in range(8)] for _ in range(8)]
-
-        # Rozstawienie pionków
-        for y in range(8):
-            szachownica[1][y] = Pionek('biały')
-            szachownica[6][y] = Pionek('czarny')
-
-        # Rozstawienie innych figur
-        figury = [Wieza, Skoczek, Goniec, Hetman, Krol, Goniec, Skoczek, Wieza]
-        for y, Figura in enumerate(figury):
-            szachownica[0][y] = Figura('biały')
-            szachownica[7][y] = Figura('czarny')
-
-        return szachownica
+        self.szachownica = Szachownica()
+        self.gracz = 'biały'
 
     def ruch(self, poczatek, koniec):
         x1, y1 = poczatek
         x2, y2 = koniec
-        figura = self.szachownica[x1][y1]
+        figura = self.szachownica.pole(x1, y1)
 
-        if figura == '':
+        if figura == '' or figura.kolor != self.gracz:
             return False
 
-        if figura.kolor != ('biały' if self.gracz_bialy else 'czarny'):
-            return False
-
-        ruchy = figura.dozwolone_ruchy(poczatek, self.szachownica)
-        if (x2, y2) not in ruchy:
+        if self.szachownica.ruch(poczatek, koniec):
+            self.gracz = 'czarny' if self.gracz == 'biały' else 'biały'
+            return True
+        else:
             return False
 
         # Wykonaj próbny ruch
@@ -293,20 +296,20 @@ def wyswietl_szachownice(szachownica):
     for x in range(8):
         wiersz = ''
         for y in range(8):
-            figura = szachownica[x][y]
+            figura = szachownica.pole(x, y)
             if figura == '':
                 symbol = '.'
             else:
                 if isinstance(figura, Pionek):
                     symbol = 'P'
                 elif isinstance(figura, Wieza):
-                    symbol = 'R'
+                    symbol = 'W'
                 elif isinstance(figura, Skoczek):
-                    symbol = 'N'
+                    symbol = 'S'
                 elif isinstance(figura, Goniec):
-                    symbol = 'B'
+                    symbol = 'G'
                 elif isinstance(figura, Hetman):
-                    symbol = 'Q'
+                    symbol = 'H'
                 elif isinstance(figura, Krol):
                     symbol = 'K'
                 if figura.kolor == 'czarny':
@@ -314,6 +317,7 @@ def wyswietl_szachownice(szachownica):
             wiersz += symbol + ' '
         print(wiersz)
     print()
+
 
 
 def wczytaj_ruch():
