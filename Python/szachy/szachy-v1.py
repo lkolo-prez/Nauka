@@ -1,6 +1,47 @@
 class Szachownica:
     def __init__(self):
-        self.plansza = [['' for _ in range(8)] for _ in range(8)]
+        self.plansza = self.poczatkowa_plansza()
+
+    def poczatkowa_plansza(self):
+        # Utwórz początkową planszę
+        plansza = [['' for _ in range(8)] for _ in range(8)]
+
+        # Rozstawienie pionków
+        for y in range(8):
+            plansza[1][y] = Pionek('biały')
+            plansza[6][y] = Pionek('czarny')
+
+        # Rozstawienie innych figur
+        figury = [Wieza, Skoczek, Goniec, Hetman, Krol, Goniec, Skoczek, Wieza]
+        for y, Figura in enumerate(figury):
+            plansza[0][y] = Figura('biały')
+            plansza[7][y] = Figura('czarny')
+
+        return plansza
+
+    def ruch(self, poczatek, koniec):
+        x1, y1 = poczatek
+        x2, y2 = koniec
+        figura = self.plansza[x1][y1]
+
+        if figura == '':
+            return False
+
+        ruchy = figura.dozwolone_ruchy(poczatek, self.plansza)
+        if (x2, y2) not in ruchy:
+            return False
+
+        # Wykonaj ruch
+        self.plansza[x2][y2] = self.plansza[x1][y1]
+        self.plansza[x1][y1] = ''
+        return True
+
+    def pole(self, x, y):
+        return self.plansza[x][y]
+
+    def ustaw_figury(self, figury):
+        for (x, y), figura in figury.items():
+            self.plansza[x][y] = figura
 
 class Goniec:
     def __init__(self, kolor):
@@ -248,3 +289,61 @@ class Gra:
 
         return f"Tura gracza {kolor}."
 
+def wyswietl_szachownice(szachownica):
+    for x in range(8):
+        wiersz = ''
+        for y in range(8):
+            figura = szachownica[x][y]
+            if figura == '':
+                symbol = '.'
+            else:
+                if isinstance(figura, Pionek):
+                    symbol = 'P'
+                elif isinstance(figura, Wieza):
+                    symbol = 'R'
+                elif isinstance(figura, Skoczek):
+                    symbol = 'N'
+                elif isinstance(figura, Goniec):
+                    symbol = 'B'
+                elif isinstance(figura, Hetman):
+                    symbol = 'Q'
+                elif isinstance(figura, Krol):
+                    symbol = 'K'
+                if figura.kolor == 'czarny':
+                    symbol = symbol.lower()
+            wiersz += symbol + ' '
+        print(wiersz)
+    print()
+
+
+def wczytaj_ruch():
+    ruch = input("Wprowadź ruch (np. e2 e4): ")
+    ruch = ruch.strip().lower().split()
+
+    if len(ruch) != 2 or not all(1 <= len(poz) <= 2 for poz in ruch):
+        return None
+
+    try:
+        poczatek = (8 - int(ruch[0][1]), ord(ruch[0][0]) - ord('a'))
+        koniec = (8 - int(ruch[1][1]), ord(ruch[1][0]) - ord('a'))
+        return poczatek, koniec
+    except ValueError:
+        return None
+
+
+def main():
+    gra = Gra()
+    while True:
+        wyswietl_szachownice(gra.szachownica)
+        print(gra.stan_gry())
+
+        ruch = None
+        while ruch is None:
+            ruch = wczytaj_ruch()
+
+        if not gra.ruch(*ruch):
+            print("Nieprawidłowy ruch, spróbuj jeszcze raz.")
+
+
+if __name__ == "__main__":
+    main()
