@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restart-container
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: restart-container
+  template:
+    metadata:
+      labels:
+        app: restart-container
+    spec:
+      containers:
+      - name: restart-container
+        image: <nazwa_obrazu_kontenera>
+        imagePullPolicy: Always
+        restartPolicy: Always
+        args:
+        - /bin/bash
+        - -c
+        - sleep 10800; exit 1
